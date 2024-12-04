@@ -91,7 +91,6 @@ fn find_matches<'a>(
     letters: &Vec<char>,
     print: bool,
 ) -> Vec<Vec<(usize, usize)>> {
-    let mut current_letter_i = 0;
     let word_length = letters.len();
     let mut matches: Vec<Vec<(usize, usize)>> = vec![];
     let mut current_match = vec![];
@@ -106,31 +105,25 @@ fn find_matches<'a>(
                 print!("{}", c);
             }
 
-            if c.eq_ignore_ascii_case(&letters[current_letter_i]) {
-                if word_length == current_letter_i + 1 {
+            if c.eq_ignore_ascii_case(&letters[current_match.len()]) {
+                if word_length == current_match.len() + 1 {
                     if print {
                         print!("!");
                     }
-                    current_letter_i = 0;
                     current_match.push(pos);
                     matches.push(current_match);
                     current_match = vec![];
                 } else {
-                    current_letter_i += 1;
                     current_match.push(pos);
                 }
             } else {
                 current_match.clear();
-                current_letter_i = if c.eq_ignore_ascii_case(&letters[0]) {
+                if c.eq_ignore_ascii_case(&letters[0]) {
                     current_match.push(pos);
-                    1
-                } else {
-                    0
-                };
+                }
             }
         } else {
             current_match.clear();
-            current_letter_i = 0;
             if print {
                 println!();
             }
