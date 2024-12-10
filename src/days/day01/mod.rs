@@ -52,13 +52,11 @@ struct Lists {
 
 impl Lists {
     fn from_input(input: &str) -> Self {
-        let mut left_list = vec![];
-        let mut right_list = vec![];
-
-        for (left, right) in input.lines().map(|l| l.split_once("   ").unwrap()) {
-            left_list.push(left.parse::<usize>().unwrap());
-            right_list.push(right.parse::<usize>().unwrap());
-        }
+        let (left_list, right_list) = input
+            .lines()
+            .map(|l| l.split_once("   ").unwrap())
+            .map(|(l, r)| (l.parse::<usize>().unwrap(), r.parse::<usize>().unwrap()))
+            .unzip();
 
         Self {
             left: left_list,
