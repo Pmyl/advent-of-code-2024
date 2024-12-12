@@ -2,6 +2,8 @@
 
 use std::collections::{hash_map::Entry, HashMap};
 
+use crate::Position;
+
 pub fn solution_part1(input: &str) -> usize {
     let grid = CityGrid::from_input(input);
     grid.count_antinodes()
@@ -22,9 +24,6 @@ struct Antenna {
     position: Position,
     frequency: char,
 }
-
-#[derive(PartialEq)]
-struct Position(usize, usize);
 
 struct Distance(isize, isize);
 
