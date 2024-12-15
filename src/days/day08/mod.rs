@@ -2,7 +2,7 @@
 
 use std::collections::{hash_map::Entry, HashMap};
 
-use crate::Position;
+use crate::{Distance, Position};
 
 pub fn solution_part1(input: &str) -> usize {
     let grid = CityGrid::from_input(input);
@@ -23,21 +23,6 @@ struct CityGrid {
 struct Antenna {
     position: Position,
     frequency: char,
-}
-
-struct Distance(isize, isize);
-
-impl Distance {
-    fn between(position1: &Position, position2: &Position) -> Self {
-        Self(
-            position2.0 as isize - position1.0 as isize,
-            position2.1 as isize - position1.1 as isize,
-        )
-    }
-
-    fn multiply(&self, n: usize) -> Distance {
-        Distance(self.0 * n as isize, self.1 * n as isize)
-    }
 }
 
 impl Position {
