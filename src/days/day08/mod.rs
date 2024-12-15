@@ -25,20 +25,6 @@ struct Antenna {
     frequency: char,
 }
 
-impl Position {
-    fn move_by(&self, distance: &Distance, width: usize, height: usize) -> Option<Position> {
-        let target_x = self.0 as isize + distance.0;
-        let target_y = self.1 as isize + distance.1;
-
-        if target_x >= 0 && target_x < width as isize && target_y >= 0 && target_y < height as isize
-        {
-            Some(Position(target_x as usize, target_y as usize))
-        } else {
-            None
-        }
-    }
-}
-
 impl CityGrid {
     fn from_input(input: &str) -> Self {
         let lines = input.lines().collect::<Vec<_>>();

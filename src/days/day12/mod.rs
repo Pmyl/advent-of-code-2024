@@ -2,7 +2,7 @@
 
 use std::collections::{btree_map::Entry, BTreeMap, BTreeSet};
 
-use crate::{Movable, Position};
+use crate::Position;
 
 pub fn solution_part1(input: &str) -> usize {
     let plots = GardenPlots::from_input(input);

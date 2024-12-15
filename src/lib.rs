@@ -3,14 +3,7 @@ pub mod days;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Position(usize, usize);
 
-pub trait Movable {
-    fn left(&self) -> Option<Position>;
-    fn right(&self) -> Position;
-    fn up(&self) -> Option<Position>;
-    fn down(&self) -> Position;
-}
-
-impl Movable for Position {
+impl Position {
     fn left(&self) -> Option<Position> {
         if self.0 > 0 {
             Some(Position(self.0 - 1, self.1))
@@ -33,6 +26,25 @@ impl Movable for Position {
 
     fn down(&self) -> Position {
         Position(self.0, self.1 + 1)
+    }
+
+    fn move_by(&self, distance: &Distance, width: usize, height: usize) -> Option<Position> {
+        let target_x = self.0 as isize + distance.0;
+        let target_y = self.1 as isize + distance.1;
+
+        if target_x >= 0 && target_x < width as isize && target_y >= 0 && target_y < height as isize
+        {
+            Some(Position(target_x as usize, target_y as usize))
+        } else {
+            None
+        }
+    }
+
+    fn move_by_wrapping(&self, distance: &Distance, width: usize, height: usize) -> Position {
+        let target_x = (self.0 as isize + distance.0).rem_euclid(width as isize) as usize;
+        let target_y = (self.1 as isize + distance.1).rem_euclid(height as isize) as usize;
+
+        Position(target_x, target_y)
     }
 }
 
