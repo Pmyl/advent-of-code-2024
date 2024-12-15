@@ -1,5 +1,7 @@
 // https://adventofcode.com/2024/day/14
 
+use std::usize;
+
 use crate::{Distance, Position};
 
 pub fn solution_part1(input: &str, width: usize, height: usize) -> usize {
@@ -7,8 +9,9 @@ pub fn solution_part1(input: &str, width: usize, height: usize) -> usize {
     robots.move_for_seconds_and_check_quadrants(100, width, height)
 }
 
-pub fn solution_part2(_: &str) -> usize {
-    0
+pub fn solution_part2(input: &str, width: usize, height: usize) -> usize {
+    let robots = RobotsMovements::from_input(input);
+    robots.move_until_pattern(width, height)
 }
 
 struct RobotsMovements {
@@ -31,12 +34,16 @@ impl RobotsMovements {
         width: usize,
         height: usize,
     ) -> usize {
-        let mut positions = self
+        let positions = self
             .robots
             .iter()
             .map(|robot| robot.where_is_after_seconds(seconds, width, height))
             .collect::<Vec<_>>();
 
+        self.calculate_score(positions, width, height)
+    }
+
+    fn calculate_score(&self, mut positions: Vec<Position>, width: usize, height: usize) -> usize {
         let quadrants = vec![
             (Position(0, 0), Position(width / 2 - 1, height / 2 - 1)),
             (
@@ -72,6 +79,28 @@ impl RobotsMovements {
                 how_many
             })
             .fold(1, |acc, x| acc * x)
+    }
+
+    fn move_until_pattern(&self, width: usize, height: usize) -> usize {
+        let mut seconds_with_min_score = 0;
+        let mut min_score = usize::MAX;
+
+        for seconds in 1..=width * height {
+            let new_positions: Vec<Position> = self
+                .robots
+                .iter()
+                .map(|robot| robot.where_is_after_seconds(seconds, width, height))
+                .collect();
+
+            let new_score = self.calculate_score(new_positions, width, height);
+
+            if new_score < min_score {
+                seconds_with_min_score = seconds;
+                min_score = new_score;
+            }
+        }
+
+        seconds_with_min_score
     }
 }
 
@@ -142,12 +171,7 @@ p=9,5 v=-3,-3";
     }
 
     #[test]
-    fn test_part2_example() {
-        assert_eq!(solution_part2(EXAMPLE), 0);
-    }
-
-    #[test]
     fn test_part2() {
-        assert_eq!(solution_part2(INPUT), 0);
+        assert_eq!(solution_part2(INPUT, 101, 103), 7861);
     }
 }
