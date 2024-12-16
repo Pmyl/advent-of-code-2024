@@ -160,10 +160,7 @@ impl ReindeerMaze {
                 );
                 current_id += 1;
 
-                for next_case_with_score in [case_forward, case_left, case_right] {
-                    let next_score = next_case_with_score.0;
-                    let next_case = next_case_with_score.1;
-
+                for (next_score, next_case) in [case_forward, case_left, case_right] {
                     if next_score > min_score.0 {
                         continue;
                     }
