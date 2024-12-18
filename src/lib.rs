@@ -16,6 +16,14 @@ impl Position {
         Position(self.0 + 1, self.1)
     }
 
+    fn right_bounded(&self, width: usize) -> Option<Position> {
+        if self.0 < width - 1 {
+            Some(Position(self.0 + 1, self.1))
+        } else {
+            None
+        }
+    }
+
     fn up(&self) -> Option<Position> {
         if self.1 > 0 {
             Some(Position(self.0, self.1 - 1))
@@ -26,6 +34,14 @@ impl Position {
 
     fn down(&self) -> Position {
         Position(self.0, self.1 + 1)
+    }
+
+    fn down_bounded(&self, height: usize) -> Option<Position> {
+        if self.1 < height - 1 {
+            Some(Position(self.0, self.1 + 1))
+        } else {
+            None
+        }
     }
 
     fn move_by(&self, distance: &Distance, width: usize, height: usize) -> Option<Position> {
