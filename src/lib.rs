@@ -16,6 +16,14 @@ impl Position {
         Position(self.0 + 1, self.1)
     }
 
+    fn right_bounded(&self, width: usize) -> Option<Position> {
+        if self.0 < width - 1 {
+            Some(Position(self.0 + 1, self.1))
+        } else {
+            None
+        }
+    }
+
     fn up(&self) -> Option<Position> {
         if self.1 > 0 {
             Some(Position(self.0, self.1 - 1))
@@ -26,6 +34,14 @@ impl Position {
 
     fn down(&self) -> Position {
         Position(self.0, self.1 + 1)
+    }
+
+    fn down_bounded(&self, height: usize) -> Option<Position> {
+        if self.1 < height - 1 {
+            Some(Position(self.0, self.1 + 1))
+        } else {
+            None
+        }
     }
 
     fn move_by(&self, distance: &Distance, width: usize, height: usize) -> Option<Position> {
@@ -61,5 +77,42 @@ impl Distance {
 
     pub fn multiply(&self, n: usize) -> Distance {
         Distance(self.0 * n as isize, self.1 * n as isize)
+    }
+
+    pub fn from_direction(direction: &Direction) -> Self {
+        match direction {
+            Direction::Up => Distance(0, -1),
+            Direction::Down => Distance(0, 1),
+            Direction::Left => Distance(-1, 0),
+            Direction::Right => Distance(1, 0),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
+impl Direction {
+    fn turn_left(&self) -> Self {
+        match self {
+            Direction::Up => Direction::Left,
+            Direction::Down => Direction::Right,
+            Direction::Left => Direction::Down,
+            Direction::Right => Direction::Up,
+        }
+    }
+
+    fn turn_right(&self) -> Self {
+        match self {
+            Direction::Up => Direction::Right,
+            Direction::Down => Direction::Left,
+            Direction::Left => Direction::Up,
+            Direction::Right => Direction::Down,
+        }
     }
 }

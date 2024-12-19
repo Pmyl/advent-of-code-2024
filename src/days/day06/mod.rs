@@ -20,7 +20,7 @@ struct Lab {
 
 #[derive(Clone)]
 struct LabMap {
-    obstructions: HashSet<(usize, usize)>,
+    obstructions: Vec<Vec<bool>>,
     width: usize,
     height: usize,
 }
@@ -58,7 +58,7 @@ impl Direction {
 
 impl Lab {
     fn from_input(input: &str) -> Self {
-        let mut obstructions: HashSet<(usize, usize)> = HashSet::default();
+        let mut obstructions: Vec<Vec<bool>> = vec![];
         let mut guard = None;
         let mut width = 0;
         let mut height = 0;
@@ -66,11 +66,12 @@ impl Lab {
         for (y, line) in input.lines().enumerate() {
             height += 1;
             width = line.len();
+            let mut obstructions_line = vec![false; width];
 
             for (x, c) in line.chars().enumerate() {
                 match c {
                     '#' => {
-                        obstructions.insert((x, y));
+                        obstructions_line[x] = true;
                     }
                     '^' => {
                         guard = Some(Guard {
@@ -81,6 +82,8 @@ impl Lab {
                     _ => {}
                 }
             }
+
+            obstructions.push(obstructions_line);
         }
 
         Self {
@@ -98,10 +101,10 @@ impl Lab {
     }
 
     fn count_obstructions_to_loop(mut self) -> usize {
-        let original_lab = self.clone();
         let GuardPosition::InMap(start_position) = self.guard.position else {
             unreachable!("Always starts in map");
         };
+        let start_guard_position = self.guard.clone();
         let original_patrolling_positions = self.patrol_to_end();
         let mut obstructions_count = 0;
 
@@ -110,16 +113,14 @@ impl Lab {
                 continue;
             }
 
-            let mut virtual_lab = original_lab.clone();
-            virtual_lab
-                .map
-                .obstructions
-                .insert((position.0, position.1));
-            virtual_lab.patrol_to_end();
+            self.guard.direction = start_guard_position.direction.clone();
+            self.guard.position = start_guard_position.position.clone();
 
-            if let GuardPosition::InMap(_) = virtual_lab.guard.position {
+            self.map.obstructions[position.1][position.0] = true;
+            if self.check_for_loop() {
                 obstructions_count += 1;
             }
+            self.map.obstructions[position.1][position.0] = false;
         }
 
         obstructions_count
@@ -148,10 +149,34 @@ impl Lab {
 
         patrolled_positions
     }
+
+    fn check_for_loop(&mut self) -> bool {
+        let mut hit_obstructions = HashSet::new();
+
+        loop {
+            let GuardPosition::InMap(_) = self.guard.position else {
+                break;
+            };
+
+            if let Some(hit_obstruction) = self.guard.move_step(&self.map) {
+                let key = (hit_obstruction.0, hit_obstruction.1, self.guard.direction);
+
+                if hit_obstructions.contains(&key) {
+                    return true;
+                }
+
+                hit_obstructions.insert(key);
+            }
+        }
+
+        false
+    }
 }
 
 impl Guard {
-    fn move_step(&mut self, map: &LabMap) {
+    fn move_step(&mut self, map: &LabMap) -> Option<(usize, usize)> {
+        let mut hit_obstruction = None;
+
         loop {
             let GuardPosition::InMap(pos) = self.position else {
                 break;
@@ -174,13 +199,16 @@ impl Guard {
             {
                 self.position = GuardPosition::OutsideMap;
                 break;
-            } else if map.obstructions.contains(&(new_x as usize, new_y as usize)) {
+            } else if map.obstructions[new_y as usize][new_x as usize] {
                 self.direction = self.direction.turn_right();
+                hit_obstruction = Some((new_x as usize, new_y as usize));
             } else {
                 self.position = GuardPosition::InMap((new_x as usize, new_y as usize));
                 break;
             }
         }
+
+        hit_obstruction
     }
 }
 

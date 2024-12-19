@@ -218,13 +218,15 @@ Prize: X=18641, Y=10279";
         assert_eq!(solution_part1(INPUT), 27157);
     }
 
-    // #[test]
-    // fn test_part2_example() {
-    //     assert_eq!(solution_part2(EXAMPLE), 0);
-    // }
+    #[ignore = "todo"]
+    #[test]
+    fn test_part2_example() {
+        assert_eq!(solution_part2(EXAMPLE), 0);
+    }
 
-    // #[test]
-    // fn test_part2() {
-    //     assert_eq!(solution_part2(INPUT), 0);
-    // }
+    #[ignore = "todo"]
+    #[test]
+    fn test_part2() {
+        assert_eq!(solution_part2(INPUT), 0);
+    }
 }
