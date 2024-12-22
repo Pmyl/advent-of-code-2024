@@ -1,9 +1,5 @@
 // https://adventofcode.com/2024/day/22
 
-use std::collections::{hash_map::Entry, HashMap, HashSet};
-
-use crate::debug_pause;
-
 pub fn solution_part1(input: &str) -> usize {
     let market = MonkeyMarket::from_input(input);
     market.sum_nth_secret_numbers(2000)
@@ -70,7 +66,7 @@ impl MonkeyMarket {
             let mut history = [sn1, sn2, sn3, sn4];
             let mut snh_index: usize = 0;
 
-            let mut encodings = HashSet::<usize>::new();
+            let mut encodings = [false; 999914];
 
             for _ in 3..nth {
                 let current_secret_number = history[(snh_index + 3) % 4];
@@ -97,9 +93,9 @@ impl MonkeyMarket {
                 let encoding: usize = encoding1 + encoding2 + encoding3 + encoding4;
                 let price: usize = next_secret_number % 10;
 
-                if !encodings.contains(&encoding) {
+                if !encodings[encoding] {
                     price_changes_encoded[encoding] += price;
-                    encodings.insert(encoding);
+                    encodings[encoding] = true;
                 }
 
                 history[snh_index] = next_secret_number;
