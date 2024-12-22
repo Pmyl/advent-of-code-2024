@@ -60,7 +60,7 @@ impl MonkeyMarket {
             ((sn * 2048) ^ sn) % 16777216
         }
 
-        let mut price_changes_encoded = HashMap::<usize, usize>::new();
+        let mut price_changes_encoded = vec![0; 999914];
 
         for secret_number in self.initial_secret_numbers {
             let sn1 = secret_number;
@@ -98,13 +98,7 @@ impl MonkeyMarket {
                 let price: usize = next_secret_number % 10;
 
                 if !encodings.contains(&encoding) {
-                    match price_changes_encoded.entry(encoding) {
-                        Entry::Occupied(mut occupied_entry) => *occupied_entry.get_mut() += price,
-                        Entry::Vacant(vacant_entry) => {
-                            vacant_entry.insert(price);
-                        }
-                    }
-
+                    price_changes_encoded[encoding] += price;
                     encodings.insert(encoding);
                 }
 
@@ -113,12 +107,7 @@ impl MonkeyMarket {
             }
         }
 
-        let max_by_key = price_changes_encoded
-            .into_iter()
-            .max_by_key(|(_, v)| *v)
-            .unwrap();
-
-        max_by_key.1
+        price_changes_encoded.into_iter().max().unwrap()
     }
 }
 
