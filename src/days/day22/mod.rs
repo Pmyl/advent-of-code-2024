@@ -27,14 +27,7 @@ impl MonkeyMarket {
     fn sum_nth_secret_numbers(self, nth: usize) -> usize {
         self.initial_secret_numbers
             .into_iter()
-            .map(|sn| {
-                (0..nth).fold(sn, |mut acc, _| {
-                    acc = ((acc * 64) ^ acc) % 16777216;
-                    acc = ((acc / 32) ^ acc) % 16777216;
-                    acc = ((acc * 2048) ^ acc) % 16777216;
-                    acc
-                })
-            })
+            .map(|sn| (0..nth).fold(sn, |csn, _| next_secret_number(csn)))
             .sum()
     }
 
@@ -45,16 +38,10 @@ impl MonkeyMarket {
         // numbers go 10^abs 2  3  4  5 (max 999900)
         // can be                        max 999914
         //
-        // e.g.             -2  1 -1  3
-        // e.g. negatives    1  0  4  0 = 5
-        // e.g. numbers     200 1000 10000 300000 = 311200
-        // e.g. encoded      5 + 311200 = 311205
-
-        fn next_secret_number(mut sn: usize) -> usize {
-            sn = ((sn * 64) ^ sn) % 16777216;
-            sn = ((sn / 32) ^ sn) % 16777216;
-            ((sn * 2048) ^ sn) % 16777216
-        }
+        // e.g.             -2     1    -1     3
+        // e.g. negatives    1     0     4     0      = 5
+        // e.g. numbers      200   1000  10000 300000 = 311200
+        // e.g. encoded      5 + 311200               = 311205
 
         let mut price_changes_encoded = vec![0; 999914];
 
@@ -64,22 +51,22 @@ impl MonkeyMarket {
             let sn3 = next_secret_number(sn2);
             let sn4 = next_secret_number(sn3);
             let mut history = [sn1, sn2, sn3, sn4];
-            let mut snh_index: usize = 0;
+            let mut history_i: usize = 0;
 
             let mut encodings = [false; 999914];
 
             for _ in 3..nth {
-                let current_secret_number = history[(snh_index + 3) % 4];
+                let current_secret_number = history[(history_i + 3) % 4];
                 let next_secret_number = next_secret_number(current_secret_number);
 
-                let difference1 = (history[(snh_index + 1) % 4] % 10) as isize
-                    - (history[snh_index % 4] % 10) as isize;
-                let difference2 = (history[(snh_index + 2) % 4] % 10) as isize
-                    - (history[(snh_index + 1) % 4] % 10) as isize;
-                let difference3 = (history[(snh_index + 3) % 4] % 10) as isize
-                    - (history[(snh_index + 2) % 4] % 10) as isize;
+                let difference1 = (history[(history_i + 1) % 4] % 10) as isize
+                    - (history[history_i % 4] % 10) as isize;
+                let difference2 = (history[(history_i + 2) % 4] % 10) as isize
+                    - (history[(history_i + 1) % 4] % 10) as isize;
+                let difference3 = (history[(history_i + 3) % 4] % 10) as isize
+                    - (history[(history_i + 2) % 4] % 10) as isize;
                 let difference4 = (next_secret_number % 10) as isize
-                    - (history[(snh_index + 3) % 4] % 10) as isize;
+                    - (history[(history_i + 3) % 4] % 10) as isize;
 
                 let encoding1 = difference1.abs() as usize * 10usize.pow(2)
                     + if difference1.is_negative() { 1 } else { 0 };
@@ -98,13 +85,19 @@ impl MonkeyMarket {
                     encodings[encoding] = true;
                 }
 
-                history[snh_index] = next_secret_number;
-                snh_index = (snh_index + 1) % 4;
+                history[history_i] = next_secret_number;
+                history_i = (history_i + 1) % 4;
             }
         }
 
         price_changes_encoded.into_iter().max().unwrap()
     }
+}
+
+fn next_secret_number(mut sn: usize) -> usize {
+    sn = ((sn * 64) ^ sn) % 16777216;
+    sn = ((sn / 32) ^ sn) % 16777216;
+    ((sn * 2048) ^ sn) % 16777216
 }
 
 #[cfg(test)]
