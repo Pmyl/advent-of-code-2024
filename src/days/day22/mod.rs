@@ -53,7 +53,7 @@ impl MonkeyMarket {
             let mut history = [sn1, sn2, sn3, sn4];
             let mut history_i: usize = 0;
 
-            let mut encodings = [false; 999914];
+            let mut encodings_encountered = [false; 999914];
 
             for _ in 3..nth {
                 let current_secret_number = history[(history_i + 3) % 4];
@@ -80,9 +80,9 @@ impl MonkeyMarket {
                 let encoding: usize = encoding1 + encoding2 + encoding3 + encoding4;
                 let price: usize = next_secret_number % 10;
 
-                if !encodings[encoding] {
+                if !encodings_encountered[encoding] {
                     price_changes_encoded[encoding] += price;
-                    encodings[encoding] = true;
+                    encodings_encountered[encoding] = true;
                 }
 
                 history[history_i] = next_secret_number;
