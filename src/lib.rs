@@ -1,3 +1,5 @@
+#![feature(iter_array_chunks)]
+
 pub mod days;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
