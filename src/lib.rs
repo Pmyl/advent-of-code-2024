@@ -1,4 +1,5 @@
 #![feature(iter_array_chunks)]
+#![feature(slice_split_once)]
 
 pub mod days;
 
