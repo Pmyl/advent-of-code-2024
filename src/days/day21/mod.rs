@@ -6,12 +6,12 @@ use crate::Position;
 
 pub fn solution_part1(input: &str) -> usize {
     let codes = Codes::from_input(input);
-    codes.complexity(3)
+    codes.complexity2(3)
 }
 
 pub fn solution_part2(input: &str) -> usize {
     let codes = Codes::from_input(input);
-    codes.complexity(26)
+    codes.complexity2(26)
 }
 
 struct Codes(Vec<(Vec<NumericKey>, usize)>);
@@ -176,7 +176,10 @@ impl Codes {
             input
                 .lines()
                 .map(|line| {
-                    let value = line.strip_suffix("A").unwrap().parse::<usize>().unwrap();
+                    let value = line
+                        .chars()
+                        .filter_map(|c| c.to_digit(10))
+                        .fold(0usize, |acc, n| acc * 10 + n as usize);
                     (
                         line.chars()
                             .map(|c| match c {
@@ -268,6 +271,110 @@ impl Codes {
 
         complexity
     }
+
+    fn complexity2(&self, directional_keypads: usize) -> usize {
+        let numeric_keys_paths = numeric_keypad_shortest_paths();
+        let directional_keys_paths = directional_keypad_shortest_paths();
+
+        let mut complexity = 0;
+
+        for (keys, keys_value) in self.0.iter() {
+            let mut directions_possibilities: Vec<Vec<DirectionalKey>> = vec![vec![]];
+
+            let mut prev = NumericKey::A;
+            for i in 0..keys.len() {
+                let current = keys[i];
+
+                let paths = &numeric_keys_paths[&(prev, current)];
+                let prev_directions_possibilities = directions_possibilities;
+                directions_possibilities = vec![];
+
+                for possibility in prev_directions_possibilities {
+                    for path in paths.iter() {
+                        let mut possibility = possibility.clone();
+                        possibility.extend(path.clone());
+                        directions_possibilities.push(possibility);
+                    }
+                }
+                prev = current;
+            }
+
+            let mut memo: HashMap<(DirectionalKey, DirectionalKey, usize), usize> = HashMap::new();
+
+            let keys_to_press = directions_possibilities
+                .into_iter()
+                .map(|directions| {
+                    let mut prev_direction = DirectionalKey::A;
+
+                    directions
+                        .into_iter()
+                        .map(|direction| {
+                            let complexity = complexity_recursive(
+                                &mut memo,
+                                &directional_keys_paths,
+                                directional_keypads - 1,
+                                prev_direction,
+                                direction,
+                            );
+                            prev_direction = direction;
+                            complexity
+                        })
+                        .sum::<usize>()
+                })
+                .min()
+                .unwrap();
+
+            complexity += keys_to_press * keys_value;
+        }
+
+        complexity
+    }
+}
+
+fn complexity_recursive(
+    memo: &mut HashMap<(DirectionalKey, DirectionalKey, usize), usize>,
+    directional_keys_paths: &HashMap<(DirectionalKey, DirectionalKey), Vec<Vec<DirectionalKey>>>,
+    directional_keypads: usize,
+    start_key: DirectionalKey,
+    to_key: DirectionalKey,
+) -> usize {
+    if directional_keypads == 0 {
+        return 1;
+    }
+
+    let paths = &directional_keys_paths[&(start_key, to_key)];
+    paths
+        .iter()
+        .map(|path| {
+            let mut prev_key = DirectionalKey::A;
+
+            path.iter()
+                .map(|key| {
+                    let new_score = if let Some(memo_score) =
+                        memo.get(&(prev_key, *key, directional_keypads))
+                    {
+                        *memo_score
+                    } else {
+                        let new_score = complexity_recursive(
+                            memo,
+                            directional_keys_paths,
+                            directional_keypads - 1,
+                            prev_key,
+                            *key,
+                        );
+                        *memo
+                            .entry((prev_key, *key, directional_keypads))
+                            .or_default() = new_score;
+                        new_score
+                    };
+                    prev_key = *key;
+
+                    new_score
+                })
+                .sum::<usize>()
+        })
+        .min()
+        .unwrap()
 }
 
 #[cfg(test)]
@@ -284,17 +391,22 @@ mod tests {
 
     #[test]
     fn test_part1_sub_example_1() {
-        assert_eq!(Codes::from_input("029A").complexity(1), 12 * 29);
+        assert_eq!(Codes::from_input("029A").complexity2(1), 12 * 29);
     }
 
     #[test]
     fn test_part1_sub_example_2() {
-        assert_eq!(Codes::from_input("029A").complexity(2), 28 * 29);
+        assert_eq!(Codes::from_input("029A").complexity2(2), 28 * 29);
     }
 
     #[test]
     fn test_part1_sub_example_3() {
-        assert_eq!(Codes::from_input("029A").complexity(3), 68 * 29);
+        assert_eq!(Codes::from_input("029A").complexity2(3), 68 * 29);
+    }
+
+    #[test]
+    fn test_part1_sub_example_4() {
+        assert_eq!(Codes::from_input("3").complexity2(3), 12 * 3);
     }
 
     #[test]
@@ -307,15 +419,8 @@ mod tests {
         assert_eq!(solution_part1(INPUT), 278568);
     }
 
-    #[ignore]
-    #[test]
-    fn test_part2_example() {
-        assert_eq!(solution_part2(EXAMPLE), 0);
-    }
-
-    #[ignore]
     #[test]
     fn test_part2() {
-        assert_eq!(solution_part2(INPUT), 0);
+        assert_eq!(solution_part2(INPUT), 341460772681012);
     }
 }
