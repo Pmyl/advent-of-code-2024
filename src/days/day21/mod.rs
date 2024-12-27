@@ -6,12 +6,12 @@ use crate::Position;
 
 pub fn solution_part1(input: &str) -> usize {
     let codes = Codes::from_input(input);
-    codes.complexity2(3)
+    codes.complexity(3)
 }
 
 pub fn solution_part2(input: &str) -> usize {
     let codes = Codes::from_input(input);
-    codes.complexity2(26)
+    codes.complexity(26)
 }
 
 struct Codes(Vec<(Vec<NumericKey>, usize)>);
@@ -231,74 +231,6 @@ impl Codes {
                 prev = current;
             }
 
-            for _ in 1..directional_keypads {
-                let mut new_directions_possibilities: Vec<Vec<DirectionalKey>> = vec![];
-
-                for possibility in directions_possibilities {
-                    let mut new_directions: Vec<Vec<DirectionalKey>> = vec![vec![]];
-
-                    let mut prev = DirectionalKey::A;
-                    for current in possibility {
-                        let paths = &directional_keys_paths[&(prev, current)];
-                        let prev_directions = new_directions;
-                        new_directions = vec![];
-                        for new_possibility in prev_directions {
-                            for path in paths.iter() {
-                                let mut new_possibility = new_possibility.clone();
-                                new_possibility.extend(path.clone());
-                                new_directions.push(new_possibility);
-                            }
-                        }
-                        prev = current;
-                    }
-
-                    new_directions_possibilities.append(&mut new_directions);
-                }
-
-                let shortest = new_directions_possibilities
-                    .iter()
-                    .map(|nd| nd.len())
-                    .min()
-                    .unwrap();
-                directions_possibilities = new_directions_possibilities
-                    .into_iter()
-                    .filter(|nd| nd.len() == shortest)
-                    .collect::<Vec<_>>();
-            }
-
-            complexity += directions_possibilities[0].len() * keys_value;
-        }
-
-        complexity
-    }
-
-    fn complexity2(&self, directional_keypads: usize) -> usize {
-        let numeric_keys_paths = numeric_keypad_shortest_paths();
-        let directional_keys_paths = directional_keypad_shortest_paths();
-
-        let mut complexity = 0;
-
-        for (keys, keys_value) in self.0.iter() {
-            let mut directions_possibilities: Vec<Vec<DirectionalKey>> = vec![vec![]];
-
-            let mut prev = NumericKey::A;
-            for i in 0..keys.len() {
-                let current = keys[i];
-
-                let paths = &numeric_keys_paths[&(prev, current)];
-                let prev_directions_possibilities = directions_possibilities;
-                directions_possibilities = vec![];
-
-                for possibility in prev_directions_possibilities {
-                    for path in paths.iter() {
-                        let mut possibility = possibility.clone();
-                        possibility.extend(path.clone());
-                        directions_possibilities.push(possibility);
-                    }
-                }
-                prev = current;
-            }
-
             let mut memo: HashMap<(DirectionalKey, DirectionalKey, usize), usize> = HashMap::new();
 
             let keys_to_press = directions_possibilities
@@ -391,22 +323,22 @@ mod tests {
 
     #[test]
     fn test_part1_sub_example_1() {
-        assert_eq!(Codes::from_input("029A").complexity2(1), 12 * 29);
+        assert_eq!(Codes::from_input("029A").complexity(1), 12 * 29);
     }
 
     #[test]
     fn test_part1_sub_example_2() {
-        assert_eq!(Codes::from_input("029A").complexity2(2), 28 * 29);
+        assert_eq!(Codes::from_input("029A").complexity(2), 28 * 29);
     }
 
     #[test]
     fn test_part1_sub_example_3() {
-        assert_eq!(Codes::from_input("029A").complexity2(3), 68 * 29);
+        assert_eq!(Codes::from_input("029A").complexity(3), 68 * 29);
     }
 
     #[test]
     fn test_part1_sub_example_4() {
-        assert_eq!(Codes::from_input("3").complexity2(3), 12 * 3);
+        assert_eq!(Codes::from_input("3").complexity(3), 12 * 3);
     }
 
     #[test]
