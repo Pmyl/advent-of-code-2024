@@ -1,7 +1,5 @@
 // https://adventofcode.com/2024/day/13
 
-use std::collections::HashMap;
-
 pub fn solution_part1(input: &str) -> usize {
     let claw_machine = ClawMachine::from_input(input);
     claw_machine.minimum_credits_to_win_all_prizes()
@@ -40,7 +38,7 @@ impl ClawMachine {
     fn minimum_credits_to_win_all_prizes(&self) -> usize {
         self.games
             .iter()
-            .map(|game| game.minimum_credits_to_win())
+            .map(|game| game.minimum_credits_to_win2())
             .sum()
     }
 }
@@ -118,72 +116,42 @@ impl ClawMachineGame {
         }
     }
 
-    fn minimum_credits_to_win(&self) -> usize {
-        let buttons = vec![
-            (self.button_a.0, self.button_a.1, 3),
-            (self.button_b.0, self.button_b.1, 1),
-        ];
-        let count = vec![0, 0];
-        let mut memo = vec![
-            HashMap::<(usize, usize), Option<usize>>::new(),
-            HashMap::<(usize, usize), Option<usize>>::new(),
-        ];
-        minimum_credits_to_win_recursive(0, self.prize_at, &buttons, &mut memo, count).unwrap_or(0)
-    }
-}
+    fn minimum_credits_to_win2(&self) -> usize {
+        let ax = self.button_a.0 as isize;
+        let ay = self.button_a.1 as isize;
 
-fn minimum_credits_to_win_recursive(
-    i: usize,
-    total: (usize, usize),
-    buttons: &Vec<(usize, usize, usize)>,
-    memo: &mut Vec<HashMap<(usize, usize), Option<usize>>>,
-    count: Vec<usize>,
-) -> Option<usize> {
-    if buttons.len() == i {
-        return None;
-    }
+        let bx = self.button_b.0 as isize;
+        let by = self.button_b.1 as isize;
 
-    if total == (0, 0) {
-        return Some(0);
-    }
+        let px = self.prize_at.0 as isize;
+        let py = self.prize_at.1 as isize;
 
-    if count.iter().any(|c| *c == 101) {
-        return None;
-    }
+        let b_times = (ax * py - ay * px) / (by * ax - bx * ay);
+        let a_times = (px - bx * b_times) / ax;
 
-    if let Some(t) = memo[i].get(&total) {
-        return t.clone();
-    }
+        let res1 = if a_times * ax + b_times * bx != px || a_times * ay + b_times * by != py {
+            usize::MAX
+        } else {
+            a_times as usize * 3 + b_times as usize
+        };
 
-    let mut count = count.clone();
-    count[i] += 1;
+        let a_times = (bx * py - by * px) / (ay * bx - ax * by);
+        let b_times = (px - ax * a_times) / bx;
 
-    let take = {
-        match (
-            total.0.checked_sub(buttons[i].0),
-            total.1.checked_sub(buttons[i].1),
-        ) {
-            (Some(left), Some(right)) => {
-                minimum_credits_to_win_recursive(i, (left, right), buttons, memo, count.clone())
-                    .map(|t| t + buttons[i].2)
-            }
-            _ => None,
+        let res2 = if a_times * ax + b_times * bx != px || a_times * ay + b_times * by != py {
+            usize::MAX
+        } else {
+            a_times as usize * 3 + b_times as usize
+        };
+
+        let min = res1.min(res2);
+
+        if min == usize::MAX {
+            0
+        } else {
+            min
         }
-    };
-
-    let no_take = minimum_credits_to_win_recursive(i + 1, total, buttons, memo, count);
-
-    memo[i].insert(
-        total,
-        match (take, no_take) {
-            (Some(t), Some(n)) => Some(t.min(n)),
-            (Some(t), None) => Some(t),
-            (None, Some(n)) => Some(n),
-            _ => None,
-        },
-    );
-
-    memo[i][&total]
+    }
 }
 
 #[cfg(test)]
@@ -218,15 +186,8 @@ Prize: X=18641, Y=10279";
         assert_eq!(solution_part1(INPUT), 27157);
     }
 
-    #[ignore = "todo"]
-    #[test]
-    fn test_part2_example() {
-        assert_eq!(solution_part2(EXAMPLE), 0);
-    }
-
-    #[ignore = "todo"]
     #[test]
     fn test_part2() {
-        assert_eq!(solution_part2(INPUT), 0);
+        assert_eq!(solution_part2(INPUT), 104015411578548);
     }
 }
