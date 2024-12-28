@@ -7,7 +7,7 @@ pub fn solution_part1(input: &str) -> String {
 
 pub fn solution_part2(input: &str) -> usize {
     let mut program = Program::from_input(input);
-    program.find_a_register_to_output_copy_using_reverse()
+    program.find_a_register_to_output_copy()
 }
 
 struct Program {
@@ -43,6 +43,14 @@ impl Program {
     }
 
     fn execute(&mut self) -> String {
+        self.execute_bit_output()
+            .iter()
+            .map(u8::to_string)
+            .collect::<Vec<_>>()
+            .join(",")
+    }
+
+    fn execute_bit_output(&mut self) -> Vec<u8> {
         let mut output = Vec::<u8>::new();
 
         while let Some(maybe_output) = self.execute_instruction() {
@@ -52,10 +60,6 @@ impl Program {
         }
 
         output
-            .iter()
-            .map(u8::to_string)
-            .collect::<Vec<_>>()
-            .join(",")
     }
 
     fn execute_instruction(&mut self) -> Option<Option<u8>> {
@@ -104,108 +108,33 @@ impl Program {
         }
     }
 
-    fn find_a_register_to_output_copy_using_reverse(&mut self) -> usize {
-        let mut index: usize = self.instructions.len() - 1;
-        let mut register_a: Vec<usize> = vec![0];
-        let mut register_b: Vec<usize> = vec![];
-        let mut register_c: Vec<usize> = vec![];
-        let mut instruction_pointer = self.instructions.len() - 2;
-        let mut complete = false;
+    fn find_a_register_to_output_copy(&mut self) -> usize {
+        let current_bit = self.instructions.len() - 1;
 
-        loop {
-            let (Some(op_code), Some(operand)) = (
-                self.instructions.get(instruction_pointer),
-                self.instructions.get(instruction_pointer + 1),
-            ) else {
-                panic!("There is no lowest positive initial value for register A that cause the program to output a copy of itself");
-            };
+        fn recursive(program: &mut Program, mut a: usize, current_bit: usize) -> Option<usize> {
+            for _ in 0..8 {
+                program.registers = [a, 0, 0];
+                program.instruction_pointer = 0;
 
-            if instruction_pointer == 0 {
-                instruction_pointer = self.instructions.len() - 2;
-            } else {
-                instruction_pointer -= 2;
-            }
+                let output = program.execute_bit_output();
 
-            match op_code {
-                0 => {
-                    let power = self.combo_operand_value(*operand);
-                    let denominator = 2usize.pow(power as u32);
-
-                    register_a = register_a
-                        .into_iter()
-                        .flat_map(|v| {
-                            (0..denominator)
-                                .map(|remainder| v * denominator + remainder)
-                                .collect::<Vec<_>>()
-                        })
-                        .collect::<Vec<_>>();
-                }
-                1 => todo!(),
-                2 => todo!(),
-                3 if *operand == 0 => {}
-                3 if *operand != 0 => {
-                    panic!(
-                        "Don't know how to handle this, it shouldn't be in the input {}, {}",
-                        op_code, operand
-                    )
-                }
-                4 => todo!(),
-                5 => {
-                    if complete {
-                        panic!("There is no lowest positive initial value for register A that cause the program to output a copy of itself");
+                if output.len() >= current_bit
+                    && output[current_bit] == program.instructions[current_bit]
+                {
+                    if current_bit == 0 {
+                        return Some(a);
+                    } else if let Some(register_a) = recursive(program, a, current_bit - 1) {
+                        return Some(register_a);
                     }
-
-                    match operand {
-                        0..=3 => {
-                            if *operand != self.instructions[index] {
-                                panic!("Can't do it");
-                            }
-                        }
-                        4..=6 => {
-                            let values = match operand {
-                                4 => &mut register_a,
-                                5 => &mut register_b,
-                                6 => &mut register_c,
-                                _ => unreachable!(),
-                            };
-
-                            if values.is_empty() {
-                                values.clear();
-                                values.push(self.instructions[index] as usize);
-                            } else {
-                                let mut new_values = values
-                                    .iter()
-                                    .map(|v| *v)
-                                    .filter(|v| (v % 8) as u8 == self.instructions[index])
-                                    .collect::<Vec<_>>();
-                                values.clear();
-                                values.append(&mut new_values);
-                            }
-
-                            if values.is_empty() {
-                                panic!("There is no lowest positive initial value for register A that cause the program to output a copy of itself");
-                            } else {
-                                if index == 0 {
-                                    complete = true;
-                                } else {
-                                    index -= 1;
-                                }
-                            }
-                        }
-                        _ => panic!("Invalid operand {}", operand),
-                    };
                 }
-                6 => todo!(),
-                7 => todo!(),
-                _ => panic!("Invalid op code {}", op_code),
+
+                a += 8usize.pow(current_bit as u32);
             }
 
-            if instruction_pointer == self.instructions.len() - 2 && complete {
-                break;
-            }
+            None
         }
 
-        register_a.into_iter().min().unwrap()
+        recursive(self, 0, current_bit).expect("a solution to exists")
     }
 
     fn combo_operand_value(&self, operand: u8) -> usize {
@@ -341,9 +270,8 @@ Program: 0,3,5,4,3,0";
         assert_eq!(solution_part2(EXAMPLE2), 117440);
     }
 
-    #[ignore = "todo"]
     #[test]
     fn test_part2_input() {
-        assert_eq!(solution_part2(INPUT), 0);
+        assert_eq!(solution_part2(INPUT), 236555995274861);
     }
 }
