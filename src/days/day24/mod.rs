@@ -429,7 +429,7 @@ x05 AND y05 -> z00";
         );
     }
 
-    #[ignore]
+    #[ignore = "manually found by manually looking at the graph, didn't bother implementing it"]
     #[test]
     fn test_part2() {
         // solution is gjc,gvm,qjj,qsb,wmp,z17,z26,z39

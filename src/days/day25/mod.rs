@@ -119,16 +119,4 @@ mod tests {
     fn test_part1() {
         assert_eq!(solution_part1(INPUT), 3249);
     }
-
-    #[ignore]
-    #[test]
-    fn test_part2_example() {
-        assert_eq!(solution_part2(EXAMPLE), 0);
-    }
-
-    #[ignore]
-    #[test]
-    fn test_part2() {
-        assert_eq!(solution_part2(INPUT), 0);
-    }
 }
